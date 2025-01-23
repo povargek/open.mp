@@ -12,35 +12,69 @@
 #include "../../format.hpp"
 #include <iostream>
 
+bool validateHidePlayerDialog(IPlayer& player, IPlayerDialogData* data, int dialog, int style, const std::string& title, cell const* format, const std::string& button1, const std::string& button2)
+{
+
+    // Put it back to `int` so we can detect and handle this special case.
+    // Some old code uses invalid IDs to hide dialogs.
+    if (dialog == INVALID_DIALOG_ID)
+    {
+        static bool warned = false;
+        if (!warned)
+        {
+            PawnManager::Get()->core->logLn(LogLevel::Warning, "Invalid dialog ID %d used.  Use `HidePlayerDialog()`.", dialog);
+            warned = true;
+        }
+
+        data->hide(player);
+
+        return false;
+    }
+
+    return true;
+}
+
 SCRIPT_API(ShowPlayerDialog, bool(IPlayer& player, int dialog, int style, const std::string& title, cell const* format, const std::string& button1, const std::string& button2))
 {
-	IPlayerDialogData* data = queryExtension<IPlayerDialogData>(player);
+    IPlayerDialogData* data = queryExtension<IPlayerDialogData>(player);
 
-	if (!data)
-	{
-		return false;
-	}
+    if (!data)
+    {
+        return false;
+    }
 
-	// Put it back to `int` so we can detect and handle this special case.
-	// Some old code uses invalid IDs to hide dialogs.
-	if (dialog == INVALID_DIALOG_ID)
-	{
-		static bool warned = false;
-		if (!warned)
-		{
-			PawnManager::Get()->core->logLn(LogLevel::Warning, "Invalid dialog ID %d used.  Use `HidePlayerDialog()`.", dialog);
-			warned = true;
-		}
+    if (!validateHidePlayerDialog(player, data, dialog, style, title, format, button1, button2)) {
+        // Keep the return value true, some people rely on it.
+        return true;
+    }
 
-		data->hide(player);
-		// Keep the return value true, some people rely on it.
-		return true;
-	}
+    // And instead mask the ID here.
+    AmxStringFormatter body(format, GetAMX(), GetParams(), 7);
+    data->show(player, dialog & 0xFFFF, DialogStyle(style), title, body, button1, button2);
 
-	// And instead mask the ID here.
-	AmxStringFormatter body(format, GetAMX(), GetParams(), 7);
-	data->show(player, dialog & 0xFFFF, DialogStyle(style), title, body, button1, button2);
-	return true;
+    return true;
+}
+
+// Backward compatibility with 'fmt' plugin
+SCRIPT_API(ShowPlayerDialogf, bool(IPlayer& player, int dialog, int style, const std::string& title, const std::string& button1, const std::string& button2, cell const* format))
+{
+    IPlayerDialogData* data = queryExtension<IPlayerDialogData>(player);
+
+    if (!data)
+    {
+        return false;
+    }
+
+    if (!validateHidePlayerDialog(player, data, dialog, style, title, format, button1, button2)) {
+        // Keep the return value true, some people rely on it.
+        return true;
+    }
+
+    // And instead mask the ID here.
+    AmxStringFormatter body(format, GetAMX(), GetParams(), 7);
+    data->show(player, dialog & 0xFFFF, DialogStyle(style), title, body, button1, button2);
+
+    return true;
 }
 
 /// Added for fixes.inc compatibility, but as `GetPlayerDialogID` from YSF also exists we don't need
