@@ -2,7 +2,8 @@ set(PROJECT Server)
 
 file(GLOB_RECURSE source_list "*.cpp" "*.hpp")
 
-add_executable(Server ${source_list})
+add_executable(Server ${source_list}
+		../Components/Security/security.hpp)
 
 GroupSourcesByFolder(Server ${CMAKE_CURRENT_SOURCE_DIR})
 
