@@ -13,6 +13,9 @@
 [submodule "lib/cpp-httplib"]
 	path = lib/cpp-httplib
 	url = https://github.com/openmultiplayer/cpp-httplib.git
+[submodule "lib/cpp-bcrypt"]
+    path = lib/cpp-bcrypt
+    url = https://github.com/povargek/Bcrypt.cpp.git
 [submodule "lib/cmake-conan"]
 	path = lib/cmake-conan
 	url = https://github.com/openmultiplayer/cmake-conan.git
